@@ -1,0 +1,71 @@
+---
+title: "Practice Midterm"
+author: "Justin Vernieri"
+date: "2025-03-03"
+output: html_document
+---
+
+```{r}
+# Plot and Inference
+library(fpp2)
+
+arrivals_ts <- arrivals[,4]
+Acf(arrivals_ts)
+# The number of arrivals has experienced a general increase over time from 1980 to 2013. The number of arrivals has fluctuated around 120 (thousands) from 2000 to 2013. There is a pattern of spikes and decreases over the years. 
+plot(arrivals_ts, main="Total Arrivals", ylab="Number of Arrivals (thousands)")
+
+# Central Tendency
+# The min is 23.72, the max is 136.09, the mean is 84.85, the median is 85.88, the 1st quartile is 63.95, and the 3rd quartile is 108.98.
+summary(arrivals_ts)
+# Based on the boxplot, there are no outliers in this data set. Half of the data points fall above the median of 85.88 and half fall below the median. The range of the data is the max-min, which is equal to 136.09-23.72=112.37.
+boxplot(arrivals_ts)
+ 
+
+
+# Decomposition
+stl_decomp_arrivals <- stl(arrivals_ts, s.window="periodic")
+plot(stl_decomp_arrivals)
+
+# Trend dominates this data set. There is a seasonality factor. The seasonal quarterly index fluctuates by about 6-7 points above and below zero --> Seasonality accounts for about 6-7 (thousands) more or less arrivals. 
+# The decomposition is additive.
+decompose_arrivals <- decompose(arrivals_ts)
+plot(decompose_arrivals)
+
+# The time series has the highest seasonal value in the first quarter and the lowest value in the second quarter. This makes sense because most people return home after the holidays (Christmas, New Years) in January, which is in the first quarter.
+decompose_arrivals$figure
+
+# Overall, the seasonality has big fluctuations in the value of the time series. The gaps in between the seasonal-adjusted line and the original time series suggest this. Seasonality pulls arrivals down or up by about 6-7 arrivals (in thousands). 
+plot(arrivals_ts, main="Total Arrivals in Australia", ylab="Number of Arrivals (thousands)")
+lines(seasadj(decompose_arrivals), col='red')
+
+
+# Naive Method
+naive_arrivals <- naive(arrivals_ts, 8)
+naive_arrivals
+plot(naive_arrivals, ylab="Number of Arrivals (thousands)", xlab="Time")
+
+naive_arrivals$residuals
+
+# The residuals plot indicates that there is a pattern among the residuals. There is a decreasing to increasing pattern each year. 
+plot(naive_arrivals$residuals)
+
+# The histogram of the residuals shows that the bracket 0-10 residuals (in thousands of arrivals) has the greatest frequency. For this bracket, the actual value was greater than the predicted value, equating to underestimations. The histogram also shows that a lot residuals were negative, as suggested by the high frequency bins from -20 to -10 and from -10 to 0. These bins are underestimations.
+hist(naive_arrivals$residuals)
+
+# The fitted values vs. residuals plot indicates that over-estimations are more likely for higher predicted values. For lower predicted values, the residuals are less. In other words, as the predicted values increase, the residual is more likely to be greater. 
+plot(naive_arrivals$fitted, naive_arrivals$residuals, main="Fitted Values vs. Residuals")
+
+# The actual values vs. residuals plot indicates that the actual values in the middle range actually have the largest negative and positive residuals.
+plot(arrivals_ts, naive_arrivals$residuals, main="Actual Values vs. Residuals")
+
+# The Acf output shows a strong trend as well as seasonality. There are upticks in lag 4, lag 8, and lag 12, which makes sense because the data is quarterly, so ticks every 4 lag is reasonable. 
+Acf(naive_arrivals$residuals)
+
+# The mean average percent error (MAPE) is about 11.82, which means that this forecast is off by 11.82%. This is an indication that the naive forecast may not be the best to used. Forecasts with less than 10% and as close to 0% are best. 
+# The root mean square error (RMSE) is about 12.51, which means that the average difference between the predicted values and the actual values is about 12.51 (thousands of arrivals). 
+# Overall, the accuracy of the naive forecast is not the best.
+accuracy(naive_arrivals)
+
+# The naive forecast predicts that the time series value will be 106.54 (thousands of arrivals). Another observation is that over the next two years, the uncertainty of the forecast grows as the forecast extends longer into the two years, as indicated by the shaded blue and gray areas
+summary(naive_arrivals)
+```
